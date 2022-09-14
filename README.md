@@ -19,4 +19,4 @@ BombPuppy requires sudo permissions and can optionally take two options, namely:
 ### [-n __n_packets__] 
 the number of packets to capture 
 ### [-w __filename__]
-redirecr standard output to a file
+redirect standard output to a file
