@@ -1,12 +1,12 @@
 #include "../include/Packet.hpp"
 
-#define BUFLEN 65536
+#define BUFLEN 65535
 
 int main(int argc, char *const *argv)
 {
 	int raw_soc;
-	int rmng_data_len;
-	int count = 0;
+	size_t rmng_data_len;
+	uint32_t count = 0;
 	ssize_t rcvd_len;
 	uint8_t *buffer = new uint8_t[BUFLEN];
 	uint8_t *data = NULL;
@@ -45,11 +45,11 @@ int main(int argc, char *const *argv)
 		/* Open ethernet header and print */
 		struct ethhdr *eth = reinterpret_cast<struct ethhdr *>(buffer);
 
-		print_ethhdr(eth);
+		print_ethhdr(*eth);
 
 		/* Open IP header and print */
 		struct iphdr *ip = reinterpret_cast<struct iphdr *>(buffer + sizeof(struct ethhdr));
-		print_iphdr(ip);
+		print_iphdr(*ip);
 
 		iphdrlen = ip->ihl * 4;
 
@@ -61,11 +61,11 @@ int main(int argc, char *const *argv)
 			/* Open TCP header and print */
 			struct tcphdr *tcp = reinterpret_cast<struct tcphdr *>(buffer + iphdrlen +
 																   sizeof(struct ethhdr));
-			print_tcphdr(tcp);
+			print_tcphdr(*tcp);
 
-			data = (buffer + iphdrlen + sizeof(struct ethhdr) +
+			data = (buffer + sizeof(struct ethhdr) + iphdrlen +
 					sizeof(struct tcphdr));
-			rmng_data_len = rcvd_len - (iphdrlen + sizeof(struct ethhdr) +
+			rmng_data_len = rcvd_len - (sizeof(struct ethhdr) + iphdrlen +
 										sizeof(struct tcphdr));
 			break;
 		}
@@ -74,7 +74,7 @@ int main(int argc, char *const *argv)
 			/* Open UDP header and print */
 			struct udphdr *udp = reinterpret_cast<struct udphdr *>(buffer + iphdrlen +
 																   sizeof(struct ethhdr));
-			print_udphdr(udp);
+			print_udphdr(*udp);
 
 			data = (buffer + iphdrlen + sizeof(struct ethhdr) +
 					sizeof(struct udphdr));

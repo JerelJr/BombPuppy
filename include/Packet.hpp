@@ -23,6 +23,11 @@
 #include <time.h>
 #include <unistd.h>
 
+typedef struct ethhdr _ethhdr;
+typedef struct iphdr _iphdr;
+typedef struct tcphdr _tcphdr;
+typedef struct udphdr _udphdr;
+
 struct SnifferOptions
 {
 	std::optional<std::string> src_IP;
@@ -43,13 +48,13 @@ void print_interfaces();
 
 SnifferOptions parse_args(int argc, char *const *argv);
 
-void print_ethhdr(struct ethhdr *eth);
+void print_ethhdr(const _ethhdr &eth);
 
-void print_iphdr(struct iphdr *ip);
+void print_iphdr(const _iphdr &ip);
 
-void print_tcphdr(struct tcphdr *tcp);
+void print_tcphdr(const _tcphdr &tcp);
 
-void print_udphdr(struct udphdr *udp);
+void print_udphdr(const _udphdr &udp);
 
 void print_data(uint8_t *data, int len);
 
