@@ -1,19 +1,18 @@
 #include "../include/Packet.hpp"
 
-#define BUFLEN 65536
-
+#define BUFLEN 65535
 
 int main(int argc, char *const *argv)
 {
 	int raw_soc;
-	int rmng_data;
-	int count = 0;
+	size_t rmng_data_len;
+	uint32_t count = 0;
 	ssize_t rcvd_len;
-	unsigned char *buffer = new unsigned char[BUFLEN];
-	unsigned char *data = NULL;
+	uint8_t *buffer = new uint8_t[BUFLEN];
+	uint8_t *data = NULL;
 	struct sockaddr addr;
 	socklen_t addr_len = sizeof(addr);
-	unsigned short iphdrlen;
+	uint16_t iphdrlen;
 
 	SnifferOptions args = parse_args(argc, argv);
 
@@ -32,7 +31,7 @@ int main(int argc, char *const *argv)
 	/* Capture loop */
 	while (count != args.n_packets)
 	{
-		rmng_data = 0;
+		rmng_data_len = 0;
 		// clear buffer
 		memset(buffer, 0, BUFLEN);
 		// receive packet
@@ -44,13 +43,13 @@ int main(int argc, char *const *argv)
 			return -1;
 		}
 		/* Open ethernet header and print */
-		struct ethhdr *eth = (struct ethhdr *)(buffer);
+		struct ethhdr *eth = reinterpret_cast<struct ethhdr *>(buffer);
 
-		print_ethhdr(eth);
+		print_ethhdr(*eth);
 
 		/* Open IP header and print */
-		struct iphdr *ip = (struct iphdr *)(buffer + sizeof(struct ethhdr));
-		print_iphdr(ip);
+		struct iphdr *ip = reinterpret_cast<struct iphdr *>(buffer + sizeof(struct ethhdr));
+		print_iphdr(*ip);
 
 		iphdrlen = ip->ihl * 4;
 
@@ -60,27 +59,27 @@ int main(int argc, char *const *argv)
 		case 6:
 		{
 			/* Open TCP header and print */
-			struct tcphdr *tcp = (struct tcphdr *)(buffer + iphdrlen +
-												   sizeof(struct ethhdr));
-			print_tcphdr(tcp);
+			struct tcphdr *tcp = reinterpret_cast<struct tcphdr *>(buffer + iphdrlen +
+																   sizeof(struct ethhdr));
+			print_tcphdr(*tcp);
 
-			data = (buffer + iphdrlen + sizeof(struct ethhdr) +
+			data = (buffer + sizeof(struct ethhdr) + iphdrlen +
 					sizeof(struct tcphdr));
-			rmng_data = rcvd_len - (iphdrlen + sizeof(struct ethhdr) +
-									sizeof(struct tcphdr));
+			rmng_data_len = rcvd_len - (sizeof(struct ethhdr) + iphdrlen +
+										sizeof(struct tcphdr));
 			break;
 		}
 		case 17:
 		{
 			/* Open UDP header and print */
-			struct udphdr *udp = (struct udphdr *)(buffer + iphdrlen +
-												   sizeof(struct ethhdr));
-			print_udphdr(udp);
+			struct udphdr *udp = reinterpret_cast<struct udphdr *>(buffer + iphdrlen +
+																   sizeof(struct ethhdr));
+			print_udphdr(*udp);
 
 			data = (buffer + iphdrlen + sizeof(struct ethhdr) +
 					sizeof(struct udphdr));
-			rmng_data = rcvd_len - (iphdrlen + sizeof(struct ethhdr) +
-									sizeof(struct udphdr));
+			rmng_data_len = rcvd_len - (iphdrlen + sizeof(struct ethhdr) +
+										sizeof(struct udphdr));
 			break;
 		}
 		default:
@@ -89,7 +88,7 @@ int main(int argc, char *const *argv)
 		}
 
 		/* Print data */
-		print_data(data, rmng_data);
+		print_data(data, rmng_data_len);
 		putchar('\n');
 
 		count++;

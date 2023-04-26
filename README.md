@@ -20,3 +20,5 @@ BombPuppy requires sudo permissions and can optionally take two options, namely:
 the number of packets to capture 
 ### [-w __filename__]
 redirect standard output to a file
+## Known Issues 
+* Some layer 2 protocols not supported (yet)
