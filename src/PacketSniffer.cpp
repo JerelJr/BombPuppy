@@ -56,7 +56,21 @@ int main(int argc, char *const *argv)
 		/* Determine transport layer protocol */
 		switch (ip->protocol)
 		{
-		case 6:
+			// TODO: DRY
+		case protocol_filter::ICMP:
+		{
+			/* Open ICMP header and print */
+			struct icmphdr *icmp = reinterpret_cast<struct icmphdr *>(buffer + iphdrlen +
+																	  sizeof(struct ethhdr));
+			print_icmphdr(*icmp);
+
+			data = (buffer + sizeof(struct ethhdr) + iphdrlen +
+					sizeof(struct icmphdr));
+			rmng_data_len = rcvd_len - (sizeof(struct ethhdr) + iphdrlen +
+										sizeof(struct icmphdr));
+			break;
+		}
+		case protocol_filter::TCP:
 		{
 			/* Open TCP header and print */
 			struct tcphdr *tcp = reinterpret_cast<struct tcphdr *>(buffer + iphdrlen +
@@ -69,7 +83,7 @@ int main(int argc, char *const *argv)
 										sizeof(struct tcphdr));
 			break;
 		}
-		case 17:
+		case protocol_filter::UDP:
 		{
 			/* Open UDP header and print */
 			struct udphdr *udp = reinterpret_cast<struct udphdr *>(buffer + iphdrlen +
@@ -83,7 +97,7 @@ int main(int argc, char *const *argv)
 			break;
 		}
 		default:
-			puts("Unrecognized transport protocol");
+			puts("Unsupported transport protocol");
 			break;
 		}
 

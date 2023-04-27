@@ -54,11 +54,11 @@ SnifferOptions parse_args(int argc, char *const *argv)
 			break;
 		case 't':
 			// display tcp packets only
-			args.p_filter = SnifferOptions::TCP;
+			args.p_filter = protocol_filter::TCP;
 			break;
 		case 'u':
 			// display udp packets only
-			args.p_filter = SnifferOptions::UDP;
+			args.p_filter = protocol_filter::UDP;
 			break;
 		default:
 			// std::cout << "Unrecognized argument: -" << opt << std::endl;
@@ -70,8 +70,8 @@ SnifferOptions parse_args(int argc, char *const *argv)
 
 void print_ethhdr(const _ethhdr &eth)
 {
-	printf("\nEthernet Header\n");
-	printf("\t|-Source Address: %.2X-%.2X-%.2X-%.2X-%.2X-%.2X",
+	printf("\nEthernet Header");
+	printf("\n\t|-Source Address: %.2X-%.2X-%.2X-%.2X-%.2X-%.2X",
 		   eth.h_source[0], eth.h_source[1], eth.h_source[2],
 		   eth.h_source[3], eth.h_source[4], eth.h_source[5]);
 	printf("\n\t|-Destination Address: %.2X-%.2X-%.2X-%.2X-%.2X-%.2X",
@@ -88,25 +88,34 @@ void print_iphdr(const _iphdr &ip)
 	memset(&dest, 0, sizeof(dest));
 	dest.sin_addr.s_addr = ip.daddr;
 
-	printf("\nIP Header\n");
-	printf("\t-Version: %" PRIu8 "\n", static_cast<uint8_t>(ip.version));
-	printf("\t-Internet Header Length: %" PRIu8 " DWORDS or %" PRIu16 " Bytes\n",
+	printf("\nIP Header");
+	printf("\n\t-Version: %" PRIu8 "", static_cast<uint8_t>(ip.version));
+	printf("\n\t-Internet Header Length: %" PRIu8 " DWORDS or %" PRIu16 " Bytes",
 		   static_cast<uint8_t>(ip.ihl), static_cast<uint16_t>(ip.ihl * 4));
-	printf("\t-Type of Service: %" PRIu8 "\n", static_cast<uint8_t>(ip.tos));
-	printf("\t-Total Length: %" PRIu16 " Bytes\n", ntohs(ip.tot_len));
-	printf("\t-Identification: %" PRIu16 "\n", ntohs(ip.id));
-	printf("\t-Time to Live: %" PRIu8 "\n", static_cast<uint8_t>(ip.ttl));
-	printf("\t-Protocol: %" PRIu8 "\n", static_cast<uint8_t>(ip.protocol));
-	printf("\t-Header Checksum: %" PRIu16 "\n", ntohs(ip.check));
-	printf("\t-Source IP: %s\n", inet_ntoa(source.sin_addr));
-	printf("\t-Destination IP: %s\n", inet_ntoa(dest.sin_addr));
+	printf("\n\t-Type of Service: %" PRIu8 "", static_cast<uint8_t>(ip.tos));
+	printf("\n\t-Total Length: %" PRIu16 " Bytes", ntohs(ip.tot_len));
+	printf("\n\t-Identification: %" PRIu16 "", ntohs(ip.id));
+	printf("\n\t-Time to Live: %" PRIu8 "", static_cast<uint8_t>(ip.ttl));
+	printf("\n\t-Protocol: %" PRIu8 "", static_cast<uint8_t>(ip.protocol));
+	printf("\n\t-Header Checksum: %" PRIu16 "", ntohs(ip.check));
+	printf("\n\t-Source IP: %s", inet_ntoa(source.sin_addr));
+	printf("\n\t-Destination IP: %s\n", inet_ntoa(dest.sin_addr));
 }
+
+void print_icmphdr(const _icmphdr &icmp)
+{
+	printf("\nICMP Header");
+	printf("\n\t|-Type: %" PRIu8, icmp.type);
+	printf("\n\t|-Code: %" PRIu8, icmp.code);
+	printf("\n\t|-Checksum: 0x%" PRIX16 "\n", icmp.checksum);
+}
+
 void print_tcphdr(const _tcphdr &tcp)
 {
-	printf("\nTCP Header\n");
-	printf("\t|-Source Port: %" PRIu16 "\n", ntohs(tcp.source));
-	printf("\t|-Destination Port: %" PRIu16 "\n", ntohs(tcp.dest));
-	printf("\t|-Sequence #: %" PRIu32 "", ntohl(tcp.seq));
+	printf("\nTCP Header");
+	printf("\n\t|-Source Port: %" PRIu16 "", ntohs(tcp.source));
+	printf("\n\t|-Destination Port: %" PRIu16 "", ntohs(tcp.dest));
+	printf("\n\t|-Sequence #: %" PRIu32 "", ntohl(tcp.seq));
 	printf("\t|-ACK #: %" PRIu32 "", ntohl(tcp.ack_seq));
 	printf("\n\t|-Doff: %" PRIu16 "", static_cast<uint16_t>(tcp.doff));
 	printf("\n\t|-Reserved: %" PRIu16 "", static_cast<uint16_t>(tcp.res1));
@@ -122,11 +131,11 @@ void print_tcphdr(const _tcphdr &tcp)
 }
 void print_udphdr(const _udphdr &udp)
 {
-	printf("\nUDP Header\n");
-	printf("\t|-Source Port: %" PRIu16 "\n", ntohs(udp.source));
-	printf("\t|-Destination Port: %" PRIu16 "\n", ntohs(udp.dest));
-	printf("\t|-UDP Length: %" PRIu16 "\n", ntohs(udp.len));
-	printf("\t|-UDP Checksum: %" PRIu16 "\n", ntohs(udp.check));
+	printf("\nUDP Header");
+	printf("\n\t|-Source Port: %" PRIu16 "", ntohs(udp.source));
+	printf("\n\t|-Destination Port: %" PRIu16 "", ntohs(udp.dest));
+	printf("\n\t|-UDP Length: %" PRIu16 "", ntohs(udp.len));
+	printf("\n\t|-UDP Checksum: 0x%" PRIX16 "\n", ntohs(udp.check));
 }
 void print_data(uint8_t *data, int len)
 {
