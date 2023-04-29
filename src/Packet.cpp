@@ -1,5 +1,7 @@
 #include "../include/Packet.hpp"
 
+#define HEXW(x, w) std::setw(w) << std::setfill('0') << std::hex << static_cast<int>(x)
+
 void print_interfaces()
 {
 	struct ifaddrs *addrs, *tmp;
@@ -68,19 +70,23 @@ SnifferOptions parse_args(int argc, char *const *argv)
 	return args;
 }
 
-void print_ethhdr(const _ethhdr &eth)
+void ethhdr_to_str(const _ethhdr &eth)
 {
-	printf("\nEthernet Header");
-	printf("\n\t|-Source Address: %.2X-%.2X-%.2X-%.2X-%.2X-%.2X",
-		   eth.h_source[0], eth.h_source[1], eth.h_source[2],
-		   eth.h_source[3], eth.h_source[4], eth.h_source[5]);
-	printf("\n\t|-Destination Address: %.2X-%.2X-%.2X-%.2X-%.2X-%.2X",
-		   eth.h_dest[0], eth.h_dest[1], eth.h_dest[2],
-		   eth.h_dest[3], eth.h_dest[4], eth.h_dest[5]);
-	printf("\n\t|-Protocol: %d\n", eth.h_proto);
+	std::ostringstream header_ss;
+	header_ss << "\nEthernet Header";
+	header_ss << "\n\t|-Source Address: "
+			  << HEXW(eth.h_source[0], 2) << '-' << HEXW(eth.h_source[1], 2) << '-' << HEXW(eth.h_source[2], 2) << '-'
+			  << HEXW(eth.h_source[3], 2) << '-' << HEXW(eth.h_source[4], 2) << '-' << HEXW(eth.h_source[5], 2);
+	header_ss
+		<< "\n\t|-Destination Address: "
+		<< HEXW(eth.h_dest[0], 2) << '-' << HEXW(eth.h_dest[1], 2) << '-' << HEXW(eth.h_dest[2], 2) << '-'
+		<< HEXW(eth.h_dest[3], 2) << '-' << HEXW(eth.h_dest[4], 2) << '-' << HEXW(eth.h_dest[5], 2);
+	header_ss << "\n\t|-Protocol: 0x" << ntohs(eth.h_proto) << std::endl;
+	std::cout << header_ss.str();
 }
 void print_iphdr(const _iphdr &ip)
 {
+	std::ostringstream header_ss;
 	struct sockaddr_in source, dest;
 
 	memset(&source, 0, sizeof(source));
@@ -88,54 +94,80 @@ void print_iphdr(const _iphdr &ip)
 	memset(&dest, 0, sizeof(dest));
 	dest.sin_addr.s_addr = ip.daddr;
 
-	printf("\nIP Header");
-	printf("\n\t-Version: %" PRIu8 "", static_cast<uint8_t>(ip.version));
-	printf("\n\t-Internet Header Length: %" PRIu8 " DWORDS or %" PRIu16 " Bytes",
-		   static_cast<uint8_t>(ip.ihl), static_cast<uint16_t>(ip.ihl * 4));
-	printf("\n\t-Type of Service: %" PRIu8 "", static_cast<uint8_t>(ip.tos));
-	printf("\n\t-Total Length: %" PRIu16 " Bytes", ntohs(ip.tot_len));
-	printf("\n\t-Identification: %" PRIu16 "", ntohs(ip.id));
-	printf("\n\t-Time to Live: %" PRIu8 "", static_cast<uint8_t>(ip.ttl));
-	printf("\n\t-Protocol: %" PRIu8 "", static_cast<uint8_t>(ip.protocol));
-	printf("\n\t-Header Checksum: %" PRIu16 "", ntohs(ip.check));
-	printf("\n\t-Source IP: %s", inet_ntoa(source.sin_addr));
-	printf("\n\t-Destination IP: %s\n", inet_ntoa(dest.sin_addr));
+	header_ss << "\nIP Header";
+	header_ss << "\n\t|-Version: " << static_cast<uint32_t>(ip.version);
+	header_ss << "\n\t|-Internet Header Length: " << static_cast<uint32_t>(ip.ihl)
+			  << " DWORDS or " << static_cast<uint32_t>(ip.ihl * 4) << " Bytes";
+	header_ss << "\n\t|-Type of Service: " << static_cast<uint16_t>(ip.tos);
+	header_ss << "\n\t|-Total Length: " << ntohs(ip.tot_len) << " Bytes";
+	header_ss << "\n\t|-Identification: " << ntohs(ip.id);
+	header_ss << "\n\t|-Time to Live: " << static_cast<uint16_t>(ip.ttl);
+	header_ss << "\n\t|-Protocol: " << static_cast<uint16_t>(ip.protocol);
+	header_ss << "\n\t|-Header Checksum: 0x" << HEXW(ntohs(ip.check), 4);
+	header_ss << "\n\t|-Source IP: " << inet_ntoa(source.sin_addr);
+	header_ss << "\n\t|-Destination IP: " << inet_ntoa(dest.sin_addr) << std::endl;
+
+	std::cout << header_ss.str();
 }
 
 void print_icmphdr(const _icmphdr &icmp)
 {
-	printf("\nICMP Header");
-	printf("\n\t|-Type: %" PRIu8, icmp.type);
-	printf("\n\t|-Code: %" PRIu8, icmp.code);
-	printf("\n\t|-Checksum: 0x%" PRIX16 "\n", icmp.checksum);
+	std::ostringstream header_ss;
+
+	header_ss << "\nICMP Header";
+	header_ss << "\n\t|-Type: " << static_cast<uint16_t>(icmp.type);
+	header_ss << "\n\t|-Code: " << static_cast<uint16_t>(icmp.code);
+	header_ss << "\n\t|-Checksum: 0x" << HEXW(ntohs(icmp.checksum), 4) << std::endl;
+
+	std::cout << header_ss.str();
+}
+
+void print_igmphdr(const _igmphdr &igmp)
+{
+	std::ostringstream header_ss;
+
+	header_ss << "\nIGMP Header";
+	header_ss << "\n\t|-Type: " << static_cast<uint16_t>(igmp.igmp_type);
+	header_ss << "\n\t|-Code: " << static_cast<uint16_t>(igmp.igmp_code);
+	header_ss << "\n\t|-Checksum: 0x" << HEXW(ntohs(igmp.igmp_cksum), 4);
+	header_ss << "\n\t|-Group: " << inet_ntoa(igmp.igmp_group) << std::endl;
+
+	std::cout << header_ss.str();
 }
 
 void print_tcphdr(const _tcphdr &tcp)
 {
-	printf("\nTCP Header");
-	printf("\n\t|-Source Port: %" PRIu16 "", ntohs(tcp.source));
-	printf("\n\t|-Destination Port: %" PRIu16 "", ntohs(tcp.dest));
-	printf("\n\t|-Sequence #: %" PRIu32 "", ntohl(tcp.seq));
-	printf("\t|-ACK #: %" PRIu32 "", ntohl(tcp.ack_seq));
-	printf("\n\t|-Doff: %" PRIu16 "", static_cast<uint16_t>(tcp.doff));
-	printf("\n\t|-Reserved: %" PRIu16 "", static_cast<uint16_t>(tcp.res1));
-	printf("\n\t|-Congestion Window Reduced: %" PRIu16 "",
-		   static_cast<uint16_t>(tcp.cwr));
-	printf("\n\t|-ECN-Echo: %" PRIu16 "", static_cast<uint16_t>(tcp.ece));
-	printf("\n\t|-Urgent: %" PRIu16 "", static_cast<uint16_t>(tcp.urg));
-	printf("\n\t|-Acknowledgement: %" PRIu16 "", static_cast<uint16_t>(tcp.ack));
-	printf("\n\t|-Push: %" PRIu16 "", static_cast<uint16_t>(tcp.psh));
-	printf("\n\t|-Reset: %" PRIu16 "", static_cast<uint16_t>(tcp.rst));
-	printf("\n\t|-Syn: %" PRIu16 "", static_cast<uint16_t>(tcp.syn));
-	printf("\n\t|-Fin: %" PRIu16 "\n", static_cast<uint16_t>(tcp.fin));
+	std::ostringstream header_ss;
+
+	header_ss << "\nTCP Header";
+	header_ss << "\n\t|-Source Port: " << ntohs(tcp.source);
+	header_ss << "\n\t|-Destination Port: " << ntohs(tcp.dest);
+	header_ss << "\n\t|-Sequence #: " << ntohl(tcp.seq);
+	header_ss << "\t|-ACK #: " << ntohl(tcp.ack_seq);
+	header_ss << "\n\t|-Doff: " << static_cast<uint16_t>(tcp.doff);
+	header_ss << "\n\t|-Reserved: " << static_cast<uint16_t>(tcp.res1);
+	header_ss << "\n\t|-Congestion Window Reduced: " << static_cast<uint16_t>(tcp.window);
+	header_ss << "\n\t|-ECN-Echo: " << static_cast<uint16_t>(tcp.ece);
+	header_ss << "\n\t|-Urgent: " << static_cast<uint16_t>(tcp.urg);
+	header_ss << "\n\t|-Acknowledgement: " << static_cast<uint16_t>(tcp.ack);
+	header_ss << "\n\t|-Push: " << static_cast<uint16_t>(tcp.psh);
+	header_ss << "\n\t|-Reset: " << static_cast<uint16_t>(tcp.rst);
+	header_ss << "\n\t|-Syn: " << static_cast<uint16_t>(tcp.syn);
+	header_ss << "\n\t|-Fin: " << static_cast<uint16_t>(tcp.fin) << std::endl;
+
+	std::cout << header_ss.str();
 }
 void print_udphdr(const _udphdr &udp)
 {
-	printf("\nUDP Header");
-	printf("\n\t|-Source Port: %" PRIu16 "", ntohs(udp.source));
-	printf("\n\t|-Destination Port: %" PRIu16 "", ntohs(udp.dest));
-	printf("\n\t|-UDP Length: %" PRIu16 "", ntohs(udp.len));
-	printf("\n\t|-UDP Checksum: 0x%" PRIX16 "\n", ntohs(udp.check));
+	std::ostringstream header_ss;
+
+	header_ss << "\nUDP Header";
+	header_ss << "\n\t|-Source Port: " << ntohs(udp.source);
+	header_ss << "\n\t|-Destination Port: " << ntohs(udp.dest);
+	header_ss << "\n\t|-UDP Length: " << ntohs(udp.len);
+	header_ss << "\n\t|-UDP Checksum: 0x" << HEXW(ntohs(udp.check), 4) << std::endl;
+
+	std::cout << header_ss.str();
 }
 void print_data(uint8_t *data, int len)
 {
@@ -148,7 +180,7 @@ void print_data(uint8_t *data, int len)
 			for (int j = i - 16; j < i; j++)
 			{
 				if (data[j] >= 32 && data[j] <= 128)
-					printf("%c", static_cast<uint8_t>(data[j])); // print data in ascii
+					printf("%c", (data[j])); // print data in ascii
 				else
 					putchar('.');
 			}

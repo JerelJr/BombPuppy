@@ -7,16 +7,18 @@
 #include <fcntl.h>
 #include <ifaddrs.h>
 #include <inttypes.h>
+#include <iomanip>
 #include <iostream>
-#include <linux/igmp.h>
 #include <linux/tcp.h>
-#include <linux/udp.h>
 #include <memory>
 #include <netinet/if_ether.h>
+#include <netinet/igmp.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
+#include <netinet/udp.h>
 #include <optional>
+#include <sstream>
 #include <string.h>
 // #include <sys/capability.h>
 #include <sys/socket.h>
@@ -26,6 +28,7 @@
 typedef struct ethhdr _ethhdr;
 typedef struct iphdr _iphdr;
 typedef struct icmphdr _icmphdr;
+typedef struct igmp _igmphdr;
 typedef struct tcphdr _tcphdr;
 typedef struct udphdr _udphdr;
 
@@ -51,11 +54,13 @@ void print_interfaces();
 
 SnifferOptions parse_args(int argc, char *const *argv);
 
-void print_ethhdr(const _ethhdr &eth);
+void ethhdr_to_str(const _ethhdr &eth);
 
 void print_iphdr(const _iphdr &ip);
 
 void print_icmphdr(const _icmphdr &icmp);
+
+void print_igmphdr(const _igmphdr &igmp);
 
 void print_tcphdr(const _tcphdr &tcp);
 

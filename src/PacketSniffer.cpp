@@ -45,7 +45,7 @@ int main(int argc, char *const *argv)
 		/* Open ethernet header and print */
 		struct ethhdr *eth = reinterpret_cast<struct ethhdr *>(buffer);
 
-		print_ethhdr(*eth);
+		ethhdr_to_str(*eth);
 
 		/* Open IP header and print */
 		struct iphdr *ip = reinterpret_cast<struct iphdr *>(buffer + sizeof(struct ethhdr));
@@ -57,6 +57,19 @@ int main(int argc, char *const *argv)
 		switch (ip->protocol)
 		{
 			// TODO: DRY
+		case protocol_filter::IGMP:
+		{
+			/* Open ICMP header and print */
+			struct igmp *igmp = reinterpret_cast<struct igmp *>(buffer + iphdrlen +
+																sizeof(struct ethhdr));
+			print_igmphdr(*igmp);
+
+			data = (buffer + sizeof(struct ethhdr) + iphdrlen +
+					sizeof(struct icmphdr));
+			rmng_data_len = rcvd_len - (sizeof(struct ethhdr) + iphdrlen +
+										sizeof(struct igmp));
+			break;
+		}
 		case protocol_filter::ICMP:
 		{
 			/* Open ICMP header and print */
