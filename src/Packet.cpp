@@ -70,9 +70,30 @@ SnifferOptions parse_args(int argc, char *const *argv)
 	return args;
 }
 
+void arphdr_to_str(const _arphdr &arp)
+{
+	std::ostringstream header_ss;
+
+	header_ss << "\nARP Header";
+	header_ss << "\n\t|-Hardware Type: " << arp.hrd;
+	header_ss << "\n\t|-Protocol Type: " << arp.pro;
+	header_ss << "\n\t|-Hardware Address Length: " << arp.hln;
+	header_ss << "\n\t|-Protocol Address Length: " << arp.pln;
+	header_ss << "\n\t|-Opcode: " << arp.op;
+	header_ss << "\n\t|-Sender MAC Address: "
+			  << HEXW(arp.sender_mac[0], 2) << '-' << HEXW(arp.sender_mac[1], 2) << '-' << HEXW(arp.sender_mac[2], 2) << '-'
+			  << HEXW(arp.sender_mac[3], 2) << '-' << HEXW(arp.sender_mac[4], 2) << '-' << HEXW(arp.sender_mac[5], 2);
+	header_ss << "\n\t|-Sender IP Address: " << inet_ntoa(arp.sender_ip);
+	header_ss << "\n\t|-Receiver MAC Address: "
+			  << HEXW(arp.recv_mac[0], 2) << '-' << HEXW(arp.recv_mac[1], 2) << '-' << HEXW(arp.recv_mac[2], 2) << '-'
+			  << HEXW(arp.recv_mac[3], 2) << '-' << HEXW(arp.recv_mac[4], 2) << '-' << HEXW(arp.recv_mac[5], 2);
+	header_ss << "\n\t|-Receiver IP Address: " << inet_ntoa(arp.recv_ip);
+}
+
 void ethhdr_to_str(const _ethhdr &eth)
 {
 	std::ostringstream header_ss;
+	// \033[1;31;47m
 	header_ss << "\nEthernet Header";
 	header_ss << "\n\t|-Source Address: "
 			  << HEXW(eth.h_source[0], 2) << '-' << HEXW(eth.h_source[1], 2) << '-' << HEXW(eth.h_source[2], 2) << '-'
@@ -84,7 +105,7 @@ void ethhdr_to_str(const _ethhdr &eth)
 	header_ss << "\n\t|-Protocol: 0x" << ntohs(eth.h_proto) << std::endl;
 	std::cout << header_ss.str();
 }
-void print_iphdr(const _iphdr &ip)
+void iphdr_to_str(const _iphdr &ip)
 {
 	std::ostringstream header_ss;
 	struct sockaddr_in source, dest;

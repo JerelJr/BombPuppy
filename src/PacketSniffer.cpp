@@ -49,7 +49,7 @@ int main(int argc, char *const *argv)
 
 		/* Open IP header and print */
 		struct iphdr *ip = reinterpret_cast<struct iphdr *>(buffer + sizeof(struct ethhdr));
-		print_iphdr(*ip);
+		iphdr_to_str(*ip);
 
 		iphdrlen = ip->ihl * 4;
 
@@ -65,7 +65,7 @@ int main(int argc, char *const *argv)
 			print_igmphdr(*igmp);
 
 			data = (buffer + sizeof(struct ethhdr) + iphdrlen +
-					sizeof(struct icmphdr));
+					sizeof(struct igmp));
 			rmng_data_len = rcvd_len - (sizeof(struct ethhdr) + iphdrlen +
 										sizeof(struct igmp));
 			break;
