@@ -1,5 +1,6 @@
 # BombPuppy
 A small command-line packet sniffer
+
 ![Demo_Image](demo/Censored_Demo.png)
 ## Compiling
 For a regular compilation:
